@@ -4,15 +4,15 @@ It's a bash script to fix bad sectors on hard disks, using only smartctl for tes
 
 All modern HDD comes with extra blocks to be used by the disk when bad-blocks shows up, automatically. 
 
-Essentially, the HDD "cpu" remaps the disk physical block (which is bad) of a logical block to a diferent physical block from this extra pool, essentially making the logical block work again! 
+Essentially, the HDD "cpu" remaps the disk physical block (which is bad) of a logical block to a diferent physical block from this extra pool, essentially making the logical block work again! <br>
 Unfotunatelly, "automatically" doesn't mean "without intervention". Automatically in this case means that once a new WRITE to the bad logical block happens, the HDD "cpu" will remap it to a good physical block. 
 
-Unfortunally this will only happen if the computer "asks" the HDD to do it! It won't do by itself, since the data in that bad block will be lost once you re-write it. 
-In Linux, fsck will detect such bad blocks, and will attempt to re-write those blocks, triggering the HDD to fix the bad block.
+Unfortunally this will only happen if the computer "asks" the HDD to do it! It won't do by itself, since the data in that bad block will be lost once you re-write it. <br>
+In Linux, fsck will detect such bad blocks, and will attempt to re-write those blocks, triggering the HDD to fix the bad block.<br>
 But from my experience, fsck sometimes misses a bunch of those bad blocks!
 
-That's when I decided to write this script. 
-Basically, it uses the HDD own SMART system to check for bad sectors, and once it finds it, uses hdparm to write over then. 
+That's when I decided to write this script. <br>
+Basically, it uses the HDD own SMART system to check for bad sectors, and once it finds it, uses hdparm to write over then. <br>
 I was able to bring some HDD back to life using this approach, when fsck wouldn't. 
 
 just use it as: 
@@ -29,13 +29,13 @@ After fixing a drive susscessfully, I usually format then as ZFS (a single disk 
 
 
 
-Basycally, don't throw away a HDD just because its starting showing some Bad Blocks... There's already a lot of tech-trash over our earth, so lets be a bit more methodical before contributing to the polution!!
-Fix it, and see how it behaves after!
+Basycally, don't throw away a HDD just because its starting showing some Bad Blocks... There's already a lot of tech-trash over our earth, so lets be a bit more methodical before contributing to the polution!!<br>
+Fix it, and see how it behaves after!<br>
 Off course, don't put any crucial data in it until you're 100% sure it's not going to present new bad blocks! 
 
 
 
-Last, this script works pretty well if the SMART system in the disk is working properly. Sometimes when a disk starts to fault, the SMART system is also affected. When this happens, it becomes SLOW, to the point of not responding. 
+Last, this script works pretty well if the SMART system in the disk is working properly. Sometimes when a disk starts to fault, the SMART system is also affected. When this happens, it becomes SLOW, to the point of not responding. <br>
 If your HDD has a slow or unresponsive SMART, this script probably won't work on it. 
 
 to verify if your HDD has a healty SMART, run: 
