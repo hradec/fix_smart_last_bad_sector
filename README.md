@@ -16,10 +16,10 @@ Basically, it uses the HDD own SMART system to check for bad sectors, and once i
 I was able to bring some HDD back to life using this approach, when fsck wouldn't. 
 
 just use it as: 
-
-   ```
-   sudo fix_smart_last_bad_sector.sh /dev/sda    # /dev/sda is and example of a disk to be fixed! replace it by your faulty disk!
-   ```
+```
+   # /dev/sda is and example of a disk to be fixed! replace it by your faulty disk!
+   sudo fix_smart_last_bad_sector.sh /dev/sda    
+```
    
 and it will ask smartctl to do an long test on /dev/sda. if this tests stops with bad LBA, it will use hdparm to fix the LBA and start the long test again until the long test finishes susscessfully!
 
@@ -40,7 +40,9 @@ If your HDD has a slow or unresponsive SMART, this script probably won't work on
 
 to verify if your HDD has a healty SMART, run: 
 
-    ``` time sudo smartctl -a /dev/sda    # replace /dev/sda by your HDD device ```
+``` 
+   time sudo smartctl -a /dev/sda    # replace /dev/sda by your HDD device 
+```
     
 The `time` command should return something like this if you have a healthy SMART:
 ```
