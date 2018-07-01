@@ -1,6 +1,6 @@
 # fix_smart_last_bad_sector.sh script
 
-It's a bash script to fix bad sectors on hard disks, using only smartctl for testing and hdparm to re-write the bad blocks. (It will erase the data on those bad sectors, plus 7 adjacent sectors - so the data on the "fixed" sectors WILL BE LOST!)
+It's a bash script to fix bad sectors on hard disks, using only smartctl for testing and hdparm to re-write the bad blocks. (It will erase the data on those bad sectors, plus 7 adjacent sectors - so the data on the "fixed" sectors WILL BE LOST, but the data on the rest of the disk will be OK)
 
 All modern HDD comes with extra blocks to be used by the disk when bad-blocks shows up, automatically. 
 
