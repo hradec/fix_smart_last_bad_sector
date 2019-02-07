@@ -1,0 +1,38 @@
+#!/bin/bash 
+
+cat /proc/partitions  | grep -v zd | awk '{print $(NF)}' | grep -v '....' | grep -v '^$' | while read p ; do 
+        maxLBA=$(hdparm -I /dev/$p | grep LBA48 | awk '{print $(NF)}')
+	cmd="smartctl -t selective,0-$maxLBA /dev/$p"
+	echo $cmd
+#	smartctl -X /dev/$p 
+#	$cmd
+done
+
+while true ; do
+	echo "" > /dev/shm/lines
+	cat /proc/partitions  | grep -v zd | awk '{print $(NF)}' | grep -v '....' | grep -v '^$' | while read p ; do
+		echo ============================================================================================== >> /dev/shm/lines
+		echo /dev/$p >> /dev/shm/lines
+		smartctl -a /dev/$p 2>&1 > /dev/shm/$p
+
+		cat /dev/shm/$p | egrep -A 1 'Self-test routine in progress |Self_test_in_progress|# 1 ' | egrep -v '\-\-|# 2 ' | head -4 > /dev/shm/lines$p
+		if [ "$(cat /dev/shm/$p | egrep -A 1 'Self-test routine in progress |Self_test_in_progress')" == "" ] ; then
+			cat /dev/shm/$p | egrep -A 1 'remaining.|Self-test routine in progress|Self_test_in_progress|# 1 ' | egrep -v '\-\-|# 2 ' | head -4 > /dev/shm/lines$p
+		fi
+		cat /dev/shm/lines$p >> /dev/shm/lines
+
+		percLine=$(cat /dev/shm/lines$p | grep left | grep '(')
+		if [ "$percLine" != "" ] ; then
+			#echo $percLine
+			max=$(echo $percLine | awk '{print $3}')
+			step=$(echo $percLine | awk '{print $(NF)}' | awk -F'-' '{print $1}' | awk -F'(' '{print $2}')
+			perc=$(python2 -c "print '%0.01f%%' % (float($step) / float('$max') * 100)")
+			echo "$perc done!" >> /dev/shm/lines
+		fi
+	done
+	/usr/bin/tput reset
+	echo "*********************************************************************************************"
+	cat /dev/shm/lines | grep -v Not_testing
+	echo "*********************************************************************************************"
+	sleep 30
+done
