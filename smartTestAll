@@ -15,9 +15,14 @@ while true ; do
 		echo /dev/$p >> /dev/shm/lines
 		smartctl -a /dev/$p 2>&1 > /dev/shm/$p
 
-		cat /dev/shm/$p | egrep -A 1 'Self-test routine in progress |Self_test_in_progress|# 1 ' | egrep -v '\-\-|# 2 ' | head -4 > /dev/shm/lines$p
-		if [ "$(cat /dev/shm/$p | egrep -A 1 'Self-test routine in progress |Self_test_in_progress')" == "" ] ; then
-			cat /dev/shm/$p | egrep -A 1 'remaining.|Self-test routine in progress|Self_test_in_progress|# 1 ' | egrep -v '\-\-|# 2 ' | head -4 > /dev/shm/lines$p
+
+		cat /dev/shm/$p | egrep 'Self_test_in_progress' | egrep -v '\-\-|# 2 ' | head -4 > /dev/shm/lines$p
+		if [ "$(cat /dev/shm/lines$p)" == "" ] ; then
+			cat /dev/shm/$p | egrep 'Self-test routine in progress' | egrep -v '\-\-|# 2 ' | head -4 > /dev/shm/lines$p
+		fi
+
+		if [ "$(cat /dev/shm/lines$p)" == "" ] ; then
+			cat /dev/shm/$p | egrep 'remaining.' | egrep -v '\-\-|# 2 ' | head -4 > /dev/shm/lines$p
 		fi
 		cat /dev/shm/lines$p >> /dev/shm/lines
 
@@ -27,8 +32,9 @@ while true ; do
 			max=$(echo $percLine | awk '{print $3}')
 			step=$(echo $percLine | awk '{print $(NF)}' | awk -F'-' '{print $1}' | awk -F'(' '{print $2}')
 			perc=$(python2 -c "print '%0.01f%%' % (float($step) / float('$max') * 100)")
-			echo "$perc done!" >> /dev/shm/lines
+			echo "    $perc done!" >> /dev/shm/lines
 		fi
+		cat /dev/shm/$p | egrep '# 1 ' >> /dev/shm/lines
 	done
 	/usr/bin/tput reset
 	echo "*********************************************************************************************"
