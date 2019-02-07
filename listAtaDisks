@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# Thanks to user "schweik" on serverfault for this little one liner to show what block device name correspond to a ataNN name (dmesg shows ataNN when low level errors occur)
+# this is the link to his post: https://serverfault.com/a/868943/508836
+#
+
+find -L /sys/bus/pci/devices/*/ata*/host*/target* \
+-maxdepth 3 -name "sd*" 2>/dev/null |\
+egrep block |egrep --colour '(ata[0-9]*)|(sd.*)' \
+;

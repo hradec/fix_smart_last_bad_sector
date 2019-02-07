@@ -1,0 +1,3 @@
+[submodule "fixhdd"]
+	path = fixhdd
+	url = git@github.com:hradec/fixhdd.git
