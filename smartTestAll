@@ -5,7 +5,7 @@ cat /proc/partitions  | grep -v zd | awk '{print $(NF)}' | grep -v '....' | grep
 	cmd="smartctl -t selective,0-$maxLBA /dev/$p"
 	echo $cmd
 #	smartctl -X /dev/$p 
-	$cmd
+#	$cmd
 done
 
 while true ; do
@@ -18,13 +18,12 @@ while true ; do
 
 		cat /dev/shm/$p | egrep 'Self_test_in_progress' | egrep -v '\-\-|# 2 ' | head -4 > /dev/shm/lines$p
 		if [ "$(cat /dev/shm/lines$p)" == "" ] ; then
-			cat /dev/shm/$p | egrep 'Self-test routine in progress' | egrep -v '\-\-|# 2 ' | head -4 > /dev/shm/lines$p
+			cat /dev/shm/$p | egrep -A1 'Self-test routine in progress' | egrep -v '\-\-|# 2 |# 1 ' | head -4 > /dev/shm/lines$p
 		fi
 
 		if [ "$(cat /dev/shm/lines$p)" == "" ] ; then
 			cat /dev/shm/$p | egrep 'remaining.' | egrep -v '\-\-|# 2 ' | head -4 > /dev/shm/lines$p
 		fi
-		cat /dev/shm/lines$p >> /dev/shm/lines
 
 		percLine=$(cat /dev/shm/lines$p | grep left | grep '(')
 		if [ "$percLine" != "" ] ; then
@@ -32,7 +31,10 @@ while true ; do
 			max=$(echo $percLine | awk '{print $3}')
 			step=$(echo $percLine | awk '{print $(NF)}' | awk -F'-' '{print $1}' | awk -F'(' '{print $2}')
 			perc=$(python2 -c "print '%0.01f%%' % (float($step) / float('$max') * 100)")
-			echo "    $perc done!" >> /dev/shm/lines
+			extra=$(cat /dev/shm/lines$p | awk '{print $(NF)" / "$3" "$4}' )
+			echo "    $perc done = $extra" >> /dev/shm/lines
+		else
+			cat /dev/shm/lines$p >> /dev/shm/lines
 		fi
 		cat /dev/shm/$p | egrep '# 1 ' >> /dev/shm/lines
 	done
