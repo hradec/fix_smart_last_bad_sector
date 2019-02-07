@@ -5,7 +5,7 @@ cat /proc/partitions  | grep -v zd | awk '{print $(NF)}' | grep -v '....' | grep
 	cmd="smartctl -t selective,0-$maxLBA /dev/$p"
 	echo $cmd
 #	smartctl -X /dev/$p 
-#	$cmd
+	$cmd
 done
 
 while true ; do
