@@ -12,9 +12,13 @@ while true ; do
 	echo "" > /dev/shm/lines
 	cat /proc/partitions  | grep -v zd | awk '{print $(NF)}' | grep -v '....' | grep -v '^$' | while read p ; do
 		echo ============================================================================================== >> /dev/shm/lines
-		echo /dev/$p >> /dev/shm/lines
 		smartctl -a /dev/$p 2>&1 > /dev/shm/$p
 
+		powerOnHours=$(cat /dev/shm/$p  | grep Power_On | awk '{print $(NF)}')
+
+		echo "/dev/$p - PowerOnHours: $powerOnHours" >> /dev/shm/lines
+		echo -n "    "
+		cat /dev/shm/$p | egrep '# 1 ' >> /dev/shm/lines
 
 		cat /dev/shm/$p | egrep 'Self_test_in_progress' | egrep -v '\-\-|# 2 ' | head -4 > /dev/shm/lines$p
 		if [ "$(cat /dev/shm/lines$p)" == "" ] ; then
@@ -36,7 +40,6 @@ while true ; do
 		else
 			cat /dev/shm/lines$p >> /dev/shm/lines
 		fi
-		cat /dev/shm/$p | egrep '# 1 ' >> /dev/shm/lines
 	done
 	/usr/bin/tput reset
 	echo "*********************************************************************************************"
