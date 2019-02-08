@@ -15,17 +15,17 @@ cat /proc/partitions  | grep -v zd | awk '{print $(NF)}' | grep -v '....' | grep
 
 	if [ "$(cat /dev/shm/smart$p | grep '# 1 ' | egrep 'Selective offline   Interrupted|Selective offline   Aborted by host')" != "" ] && [ "$inprogress" == 0 ] ; then
 		lastTestedLBA=$( cat /dev/shm/smart$p | grep SPAN -A 1 | tail -1 | egrep 'Aborted_by_host|Interrupted' | awk '{print $(NF)}' | awk -F'(' '{print $2}' | awk -F'-' '{print $1}')
-		let ini=$lastTestedLBA-400
-		if [ $ini -eq -400 ] ; then
+		let ini=$lastTestedLBA-16
+		if [ $ini -eq -16 ] ; then
 			lastTestedLBA=$( cat /dev/shm/smart$p | grep SPAN -A 1 | tail -1 | awk  '{print $2}' )
-			let ini=$lastTestedLBA-400
+			let ini=$lastTestedLBA-16
 		fi
 	else
 		if [ "$(cat /dev/shm/smart$p | grep '# 1 ' | egrep 'Completed: read failure')" != "" ] ; then
 			if [ "$inprogress" == 0 ] ; then
 				lastTestedLBA=$( cat /dev/shm/smart$p | grep '^# ' | grep 'Completed: read failure' | head -1 |  awk '{print $(NF)}' )
 				echo $lastTestedLBA
-				let ini=$lastTestedLBA-500
+				let ini=$lastTestedLBA-16
 			fi
 		fi
 	fi
