@@ -1,18 +1,63 @@
 #!/bin/bash 
 
-cat /proc/partitions  | grep -v zd | awk '{print $(NF)}' | grep -v '....' | grep -v '^$' | while read p ; do 
-        maxLBA=$(hdparm -I /dev/$p | grep LBA48 | awk '{print $(NF)}')
-	cmd="smartctl -t selective,0-$maxLBA /dev/$p"
-	echo $cmd
-#	smartctl -X /dev/$p 
-	$cmd
-done
+export PATH=.:$(dirname $BASH_SOURCE):$PATH
 
 while true ; do
+cat /proc/partitions  | grep -v zd | awk '{print $(NF)}' | grep -v '....' | grep -v '^$' | while read p ; do 
+        maxLBA=$(hdparm -I /dev/$p | grep LBA48 | awk '{print $(NF)}')
+
+	# if the last test didn't finish, continue from the last tested LBA!
+	ini=0
+	inprogress=0
+	if [ "$(smartctl -a /dev/$p | tee /dev/shm/smart$p  | egrep 'Self_test_in_progress|Self-test routine in progress|remaining.')" != "" ] ; then
+			inprogress=1
+	fi
+
+	if [ "$(cat /dev/shm/smart$p | grep '# 1 ' | egrep 'Selective offline   Interrupted|Selective offline   Aborted by host')" != "" ] && [ "$inprogress" == 0 ] ; then
+		lastTestedLBA=$( cat /dev/shm/smart$p | grep SPAN -A 1 | tail -1 | egrep 'Aborted_by_host|Interrupted' | awk '{print $(NF)}' | awk -F'(' '{print $2}' | awk -F'-' '{print $1}')
+		let ini=$lastTestedLBA-400
+		if [ $ini -eq -400 ] ; then
+			lastTestedLBA=$( cat /dev/shm/smart$p | grep SPAN -A 1 | tail -1 | awk  '{print $2}' )
+			let ini=$lastTestedLBA-400
+		fi
+	else
+		if [ "$(cat /dev/shm/smart$p | grep '# 1 ' | egrep 'Completed: read failure')" != "" ] ; then
+			if [ "$inprogress" == 0 ] ; then
+				lastTestedLBA=$( cat /dev/shm/smart$p | grep '^# ' | grep 'Completed: read failure' | head -1 |  awk '{print $(NF)}' )
+				echo $lastTestedLBA
+				let ini=$lastTestedLBA-500
+			fi
+		fi
+	fi
+
+	cmd="smartctl -t selective,$ini-99999999999 /dev/$p"
+
+	# only run the test if not in progress and fail last time
+	if [ "$(cat /dev/shm/smart$p | egrep '# 1 ' | egrep 'Completed without error')" == "" ] && [ "$inprogress" == "0" ] ; then
+		if [ "$ini" != "" ] ; then
+			echo fixhdd.py -a -o $ini /dev/$p
+			echo Yes | fixhdd.py -a -o $ini /dev/$p
+		fi
+		echo $cmd
+		$cmd
+	fi
+	
+	# or if we force it!
+	if [ "$1" == "--force" ] ; then
+		if [ "$ini" != "" ] ; then
+			fixhdd.py -a -o $ini /dev/$p
+		fi
+		smartctl -X /dev/$p 
+		echo $cmd
+		$cmd
+	fi
+
+done
 	echo "" > /dev/shm/lines
 	cat /proc/partitions  | grep -v zd | awk '{print $(NF)}' | grep -v '....' | grep -v '^$' | while read p ; do
 		echo ============================================================================================== >> /dev/shm/lines
-		smartctl -a /dev/$p 2>&1 > /dev/shm/$p
+		#smartctl -a /dev/$p 2>&1 > /dev/shm/$p
+		cp /dev/shm/smart$p  /dev/shm/$p
 
 		powerOnHours=$(cat /dev/shm/$p  | grep Power_On | awk '{print $(NF)}')
 
@@ -43,6 +88,7 @@ while true ; do
 	done
 	/usr/bin/tput reset
 	echo "*********************************************************************************************"
+	date
 	cat /dev/shm/lines | grep -v Not_testing
 	echo "*********************************************************************************************"
 	sleep 30
